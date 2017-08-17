@@ -80,6 +80,10 @@
 \RequirePackage[skins]{tcolorbox}
 % Needed to deal a paragraphs
 \RequirePackage{parskip}
+% More math
+\RequirePackage{amsmath}
+% ordinals
+\RequirePackage[super]{nth}
 % Needed to deal hyperlink
 \RequirePackage[hidelinks,unicode]{hyperref}
 \hypersetup{%
@@ -717,7 +721,7 @@
 %-------------------------------------------------------------------------------
 %\RequirePackage[style=verbose, maxnames=99, sorting=ydnt]{biblatex}
 \RequirePackage[ % BibLaTeX
-	sorting=ydnt, % Sorts entries by year (descending order), name, title
+	sorting=none, % Sorts entries by year (descending order), name, title
 	style=verbose,
 	doi=false,
 	isbn=true,
@@ -733,11 +737,13 @@
 
 % Avoid splitting entries across page break (only for 3 or fewer lines)
 % Tip: http://tex.stackexchange.com/a/51261
+\makeatletter
 \AtBeginEnvironment{thebibliography}{%
    \clubpenalty10000
    \@clubpenalty \clubpenalty
    \widowpenalty10000
-   \interlinepenalty5000}
+   \interlinepenalty10000}
+\makeatother
 
 % Customized format, based on Fancy CV template created by Adrien Friggeri
 \DeclareFieldFormat[article]{title}{#1\par}
@@ -745,47 +751,75 @@
 \DeclareFieldFormat[misc]{title}{#1\par}
 \DeclareFieldFormat[report]{title}{#1\par}
 \DeclareFieldFormat[incollection]{title}{#1\par}
+\DeclareFieldFormat[article]{volume}{\bibstring{jourvol}\addnbspace #1}
+\DeclareFieldFormat[article]{number}{\bibstring{number}\addnbspace #1}
 
+\renewbibmacro*{volume+number}{%
+  \printfield{volume}%
+  \setunit{\addcomma\space}%<---- was \setunit*{\adddot}%
+  \printfield{number}%
+  }
+
+% ---------------------------------- %
+%          Article format            %
+% ---------------------------------- %
 \DeclareBibliographyDriver{article}{%
   \fontsize{9pt}{1em}\bodyfont%
-  \printfield{title}%
+  \textsc{\printfield{title}}%
   \newblock%
-  \printnames{author}%
+  {\tiny\printnames{author}}\bodyfont%
   \par%
   \newblock%
   {%
     \fontsize{8pt}{1em}\bodyfontlight\color{graytext}%
-    \usebibmacro{journal+issuetitle}%
-    \setunit{\space}%
-    \printfield{pages}%
-    \newunit%
-    \printlist{publisher}%
+    \usebibmacro{journal}%
+    \setunit{\addcomma\space}%
+    \usebibmacro{volume+number}%
     \setunit*{\addcomma\space}%
-    \printfield{year}%
+    \printfield{pages}%
+    %\newunit%
+    %\printlist{publisher}%
+    \setunit*{\addcomma\space}%
+    \printfield{year}
+    \addperiod%
     \newunit%
   }
   \par\vspace{0.3\baselineskip}
 }
 
+
+% ---------------------------------- %
+%        Inproceedings format        %
+%      (used for presentations)      %
+% ---------------------------------- %
 \DeclareBibliographyDriver{inproceedings}{%
   \fontsize{9pt}{1em}\bodyfont%
-  \printfield{title}%
+  \textsc{\printfield{title}}%
   \newblock%
-  \printnames{author}%
+  {\tiny\printnames{author}}\bodyfont%
+  \setunit{}%
+  \hfill
+  \entrylocationstyle{\printfield{venue}}%
   \par%
   \newblock%
   {%
     \fontsize{8pt}{1em}\bodyfontlight\color{graytext}%
-    \printfield{booktitle}%
-    \setunit{\addcomma\space}%
-    \printfield{year}%
-    \setunit{\addcomma\space}%
-    \printlist{location}%
+    \printlist{publisher}%
+    \setunit{\addspace}%
+    \hfill
+    \entrydatestyle{
+      \printfield{month}%
+      \setunit{\addspace}%
+      \printfield{year}%
+    }
     \newunit%
   }
   \par\vspace{0.3\baselineskip}
 }
 
+% ------------------------------------- %
+%          Collection format            %
+% ------------------------------------- %
 \DeclareBibliographyDriver{incollection}{%
   \fontsize{9pt}{1em}\bodyfont%
   \printfield{title}%
@@ -805,6 +839,9 @@
   \par\vspace{0.3\baselineskip}
 }
 
+% -------------------------------- %
+%          Misc. format            %
+% -------------------------------- %
 \DeclareBibliographyDriver{misc}{%
   \fontsize{9pt}{1em}\bodyfont%
   \printfield{title}%
@@ -826,6 +863,9 @@
   \par\vspace{0.3\baselineskip}
 }
 
+% --------------------------------- %
+%          Report format            %
+% --------------------------------- %
 \DeclareBibliographyDriver{report}{%
   \fontsize{9pt}{1em}\bodyfont%
   \printfield{title}%
@@ -856,6 +896,6 @@
     {\ifblank{\namepartgiven}{}{\namepartgiven\space}%
     \namepartfamily}%
   \ifthenelse{\value{listcount}<\value{liststop}}
-  {\addcomma\space}
-  {}
+  {\addcomma\space}%
+  {}%
 }
